@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Girando la Ruleta!</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background-color: #f4f4f4; 
+            padding-top: 50px;
+            overflow: hidden;
+        }
+        h1 { color: #333; margin-bottom: 10px; }
+        h2 { color: #007BFF; margin-top: 10px; }
+        .ruleta-container { position: relative; width: 450px; height: 450px; margin: 20px auto; }
+        #canvas { width: 440px; height: 440px; margin: 5px; }
+        .marcador {
+            position: absolute; top: 10px; left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 50px solid #c0392b;
+            z-index: 10;
+        }
+        a { background-color: #007BFF; color: white; padding: 10px 18px;
+            text-decoration: none; border-radius: 4px; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="ruleta-container">
+        <div class="marcador"></div>
+        <canvas id="canvas" width="440" height="440"></canvas>
+    </div>
+
+    <h1 id="titulo">¡Tu código es válido!</h1>
+    <h2 id="subtitulo">Girando para ver tu premio...</h2>
+    <a id="link-volver" href="/">Volver a participar</a>
+
+    <script src="/static/gsap.min.js"></script>
+    <script src="/static/Winwheel.min.js"></script>
+
+    <script>
+        const PREMIOS = [
+            "Pizza personal",
+            "Pizza mediana",
+            "Pizza grande",
+            "Vaso de jugo",
+            "Vaso de chicha",
+            "Gelatina",
+            "Postre",
+            "Empanada",        
+            "Papa Rellena",
+            "Tamal",
+            "Cena",
+            "Tajada de queque",
+            "Gaseosa 500ml",
+            "Gaseosa 1L"
+        ];
+        const COLORES = ["#3498db", "#e74c3c", "#f1c40f"];
+
+        let premioGanado = "{{ premio_final | safe }}";
+
+        let segmentos = [];
+        for (let i = 0; i < PREMIOS.length; i++) {
+            segmentos.push({
+                fillStyle: COLORES[i % COLORES.length],
+                text: PREMIOS[i]
+            });
+        }
+
+        let laRuleta = new Winwheel({
+            numSegments: PREMIOS.length,
+            segments: segmentos,
+            textFontSize: 14,
+            outerRadius: 210,
+            innerRadius: 40,
+            animation: {
+                type: 'spinToStop',
+                duration: 5,
+                spins: 8,
+                callbackFinished: mostrarResultado
+            }
+        });
+
+        let anguloParada = 0;
+        for (let i = 1; i <= laRuleta.numSegments; i++) {
+            if (laRuleta.segments[i].text === premioGanado) {
+                let min = laRuleta.segments[i].startAngle;
+                let max = laRuleta.segments[i].endAngle;
+                anguloParada = Math.floor(Math.random() * (max - min + 1)) + min;
+                break;
+            }
+        }
+
+        laRuleta.animation.stopAngle = anguloParada;
+        laRuleta.startAnimation();
+
+        function mostrarResultado(segmento) {
+            document.getElementById("titulo").innerText = "¡Felicidades!";
+            document.getElementById("subtitulo").innerText = "Ganaste: " + segmento.text;
+            document.getElementById("link-volver").style.display = 'inline-block';
+        }
+    </script>
+
+</body>
+</html>
